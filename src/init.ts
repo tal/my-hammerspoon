@@ -13,11 +13,11 @@ const BaseDefinitions = {
     key: 'a',
     appName: "Messages.app",
     subInvocations: {
-      'w': {
-        desc: "WhatsApp",
-        key: "w",
-        appName: "WhatsApp.app"
-      }
+      // 'w': {
+      //   desc: "WhatsApp",
+      //   key: "w",
+      //   appName: "WhatsApp.app"
+      // },
     }
   },
   'c': {
@@ -35,6 +35,11 @@ const BaseDefinitions = {
     key: 'm',
     appName: "Spotify.app"
   },
+  't': {
+    desc: "Tasks",
+    key: 'm',
+    appName: "Things3.app"
+  },
   'w': {
     desc: "Arc",
     key: 'w',
@@ -45,7 +50,7 @@ const BaseDefinitions = {
         key: "s",
         appName: "Safari.app"
       }
-    }
+    },
   }
 } as const satisfies InvocationDeifinitionSet
 
