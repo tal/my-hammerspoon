@@ -128,7 +128,9 @@ hs.hotkey.bind(['⌥','⌃','⇧'], 'left', undefined, () => {
 
 function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
   let command = "/opt/homebrew/bin/tea"
-  let args = ["+nodejs.org^14", "yarn", "run", "cli", cmd]
+  // command = "/opt/homebrew/bin/yarn"
+  let args = ["yarn", "run", "cli", cmd]
+  args = ["node", "./dist/cli.js", cmd]
   const task = hs.task.new(
     command,
     (exitCode, stdOut, stdErr) => {
@@ -151,6 +153,7 @@ function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
       }
       if (exitCode && exitCode > 0) {
         hs.notify.show("Spotify Command Error", cmd, stdErr)
+        print(stdErr)
       }
       else {
         hs.notify.show("Spotify Command Complete", "", stdOut)
