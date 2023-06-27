@@ -127,8 +127,8 @@ hs.hotkey.bind(['⌥','⌃','⇧'], 'left', undefined, () => {
 })
 
 function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
-  let command = "/opt/homebrew/bin/tea"
-  // command = "/opt/homebrew/bin/yarn"
+  const homeDir = "/Users/tal"
+  let command = `${homeDir}/.tea/.local/bin/tea`
   let args = ["yarn", "run", "cli", cmd]
   args = ["node", "./dist/cli.js", cmd]
   const task = hs.task.new(
@@ -162,19 +162,19 @@ function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
     args
   )
 
-  task.setWorkingDirectory("/Users/tal/Projects/spotify-playlist")
+  task.setWorkingDirectory(`${homeDir}/Projects/spotify-playlist`)
 
   return task
 }
 hs.hotkey.bind(['⌥','⌃'], 'up', undefined, () => {
-  hs.alert.show("Promote")
+  hs.alert.show("▲")
   sendSpotifyCommand('promote').start()
 })
 hs.hotkey.bind(['⌥','⇧', '⌃'], 'up', undefined, () => {
-  hs.alert.show("Promote and skip")
+  hs.alert.show("▲⥽")
   sendSpotifyCommand('promotes').start()
 })
 hs.hotkey.bind(['⌥','⌃'], 'down', undefined, () => {
-  hs.alert.show("demote")
+  hs.alert.show("▼")
   sendSpotifyCommand('demotes').start()
 })
