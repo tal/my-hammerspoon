@@ -13,11 +13,11 @@ const BaseDefinitions = {
     key: 'a',
     appName: "Messages.app",
     subInvocations: {
-      // 'w': {
-      //   desc: "WhatsApp",
-      //   key: "w",
-      //   appName: "WhatsApp.app"
-      // },
+      'w': {
+        desc: "WhatsApp",
+        key: "w",
+        appName: "WhatsApp.app"
+      },
     }
   },
   'c': {
@@ -28,7 +28,7 @@ const BaseDefinitions = {
   'e': {
     desc: "Email",
     key: 'e',
-    appName: 'Mimestream.app'
+    appName: 'Shortwave.app'
   },
   'm': {
     desc: "Spotify",
@@ -128,19 +128,24 @@ hs.hotkey.bind(['⌥','⌃','⇧'], 'left', undefined, () => {
 
 function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
   const homeDir = "/Users/tal"
-  let command = `${homeDir}/.tea/.local/bin/tea`
-  let args = ["yarn", "run", "cli", cmd]
-  args = ["node", "./dist/cli.js", cmd]
+  let command = `/opt/homebrew/bin/node`
+  let args = ["./dist/cli.js", cmd]
   const task = hs.task.new(
     command,
     (exitCode, stdOut, stdErr) => {
-      // print(`stdOut: ${stdOut.substring(0,100)}`)
-      // print(`stdErr: ${stdErr.substring(0,100)}`)
       const startStr = "body: '"
       let idxStart = stdOut.indexOf(startStr)
       let idxEnd = stdOut.indexOf("' }\nDone")
 
-      if (idxStart >= 0 && idxEnd >= 0) {
+      const result: {body?: string} | undefined = hs.json.decode(stdOut)
+      const body: {result: {reason: string}[]} | undefined = hs.json.decode(result?.body ?? "")
+      print(hs.json.encode(body))
+      if (body?.result[1]) {
+        print(hs.json.encode(body.result[1]))
+        hs.notify.show(`${cmd} command complete`, cmd, body.result[1].reason)
+        return
+      }
+      else if (idxStart >= 0 && idxEnd >= 0) {
         const jsonText = stdOut.substring(idxStart + startStr.length, idxEnd)
         const result: any = hs.json.decode(jsonText)
         const first = result.result && result.result[1]
@@ -156,7 +161,7 @@ function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
         print(stdErr)
       }
       else {
-        hs.notify.show("Spotify Command Complete", "", stdOut)
+        hs.notify.show("Spotify Command", "unparseable", stdOut)
       }
     },
     args
