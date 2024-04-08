@@ -5,8 +5,8 @@
     "dev": "tstl --watch"
   },
   "devDependencies": {
-    "prettier": "^2.8.8",
-    "typescript": "^5.0.4",
-    "typescript-to-lua": "^1.15.1"
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.2",
+    "typescript-to-lua": "^1.25.1"
   }
 }

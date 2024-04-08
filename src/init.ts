@@ -137,12 +137,14 @@ function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
       let idxStart = stdOut.indexOf(startStr)
       let idxEnd = stdOut.indexOf("' }\nDone")
 
-      const result: {body?: string} | undefined = hs.json.decode(stdOut)
+      const result: {statusCode: number; body?: string} | undefined = hs.json.decode(stdOut)
       const body: {result: {reason: string}[]} | undefined = hs.json.decode(result?.body ?? "")
       print(hs.json.encode(body))
-      if (body?.result[1]) {
-        print(hs.json.encode(body.result[1]))
-        hs.notify.show(`${cmd} command complete`, cmd, body.result[1].reason)
+      if (body?.result) {
+        print(hs.json.encode(body.result))
+        for (const r of body.result) {
+          hs.notify.show(`${cmd} command complete`, cmd, r.reason)
+        }
         return
       }
       else if (idxStart >= 0 && idxEnd >= 0) {
