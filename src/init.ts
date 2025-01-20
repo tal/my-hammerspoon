@@ -30,10 +30,20 @@ const BaseDefinitions = {
     key: 'e',
     appName: 'Shortwave.app'
   },
+  'f': {
+    desc: "Calendar",
+    key: 'f',
+    appName: "Fantastical.app"
+  },
   'm': {
     desc: "Spotify",
     key: 'm',
     appName: "Spotify.app"
+  },
+  'n': {
+    desc: "Notes",
+    key: 'n',
+    appName: "Craft.app"
   },
   't': {
     desc: "Tasks",
@@ -86,10 +96,11 @@ const ctrlZHotkey = hs.hotkey.new(["⌃"], "z", undefined, () => {
   hs.alert.show("⌃z", 0.5)
   if (!invocationTap.isEnabled()) {
     invocationTap.start()
+
+    hs.timer.doAfter(1, () => {
+      invocationTap.stop()
+    })
   }
-  hs.timer.doAfter(1, () => {
-    invocationTap.stop()
-  })
 })
 
 currentDefinitions = BaseDefinitions
@@ -126,10 +137,58 @@ hs.hotkey.bind(['⌥','⌃','⇧'], 'left', undefined, () => {
   hs.spotify.previous()
 })
 
-function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
+// function fileExists(path: string): boolean {
+//   const attributes = hs.fs.attributes(path)
+
+//   return attributes?.NSFileType !== (hs.fs.attributes as any).NSFileType.nonexistent
+// }
+
+function dirExists(path: string): boolean {
+  const attributes = hs.fs.attributes(path)
+
+  return attributes?.mode === "directory"
+}
+
+function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes'): Task | undefined {
   const homeDir = "/Users/tal"
+  const scriptDir = `${homeDir}/Projects/spotify-playlist`
+
+  const parseBody = (body?: string): any => {
+    const bodyJSON: {result: {reason: string; value?: any }[]} | undefined = hs.json.decode(body ?? "")
+
+    if (bodyJSON) {
+      print("body " + hs.json.encode(bodyJSON ?? '{}'))
+    } else {
+      print("nil  body")
+    }
+
+    if (bodyJSON?.result) {
+      for (const r of bodyJSON.result) {
+        const actionType = r.value?.action_type ?? cmd
+        const reason = r.value?.name ?? r.reason
+        hs.notify.show(`${actionType} command complete`, actionType,  reason)
+      }
+      return
+    }
+  }
+
+  if (!dirExists(scriptDir)) {
+    hs.http.asyncGet(
+      `https://ovgepxasb9.execute-api.us-east-1.amazonaws.com/dev/spotify-playlist-dev?action=${cmd}`,
+      {},
+      (status, body, headers) => {
+        if (status !== 200) {
+          return hs.notify.show("Spotify Command Error", `Status not 200, ${status}`, `${body}`)
+        }
+        parseBody(body)
+    })
+
+    return
+  }
+
   let command = `/opt/homebrew/bin/node`
   let args = ["./dist/cli.js", cmd]
+  print(`spotify command: ${cmd}`)
   const task = hs.task.new(
     command,
     (exitCode, stdOut, stdErr) => {
@@ -138,14 +197,10 @@ function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
       let idxEnd = stdOut.indexOf("' }\nDone")
 
       const result: {statusCode: number; body?: string} | undefined = hs.json.decode(stdOut)
-      const body: {result: {reason: string}[]} | undefined = hs.json.decode(result?.body ?? "")
-      print(hs.json.encode(body))
+      const body: {result: {reason: string; value?: any }[]} | undefined = hs.json.decode(result?.body ?? "")
+
       if (body?.result) {
-        print(hs.json.encode(body.result))
-        for (const r of body.result) {
-          hs.notify.show(`${cmd} command complete`, cmd, r.reason)
-        }
-        return
+        parseBody(result?.body)
       }
       else if (idxStart >= 0 && idxEnd >= 0) {
         const jsonText = stdOut.substring(idxStart + startStr.length, idxEnd)
@@ -175,13 +230,13 @@ function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes') {
 }
 hs.hotkey.bind(['⌥','⌃'], 'up', undefined, () => {
   hs.alert.show("▲")
-  sendSpotifyCommand('promote').start()
+  sendSpotifyCommand('promote')?.start()
 })
 hs.hotkey.bind(['⌥','⇧', '⌃'], 'up', undefined, () => {
   hs.alert.show("▲⥽")
-  sendSpotifyCommand('promotes').start()
+  sendSpotifyCommand('promotes')?.start()
 })
 hs.hotkey.bind(['⌥','⌃'], 'down', undefined, () => {
   hs.alert.show("▼")
-  sendSpotifyCommand('demotes').start()
+  sendSpotifyCommand('demotes')?.start()
 })

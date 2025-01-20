@@ -17,7 +17,7 @@ declare module os {
   export function getenv(this: void, path: string): string
 }
 
-declare module hs {
+declare namespace hs {
   export const alert: Alert
   export const application: SpoonApplications
   export const drawing: {
@@ -35,6 +35,7 @@ declare module hs {
   }
   export const spotify: SpoonSpotify
   export const notify: Notify
+  export const fs: FileSystem
 
   /**
    * Runs a shell command, optionally loading the users shell environment first, and returns stdout as a string, followed by the same result codes as os.execute would return.
@@ -119,6 +120,15 @@ declare class Color {
 
 /** @noSelf */
 declare class HTTP {
+  /**
+   * Sends an HTTP GET request to a URL
+   * url - A string containing the URL to retrieve
+   * headers - A table containing string keys and values representing the request headers, or nil to add no headers
+   * callback - A function to be called when the request succeeds or fails. The function will be passed three parameters:
+   *  A number containing the HTTP response status
+   *  A string containing the response body
+   *  A table containing the response headers
+   */
   asyncGet(
     url: string,
     headers: { [key: string]: string } | null,
@@ -437,4 +447,31 @@ declare interface Notify {
 
 declare interface Notification {
 
+}
+
+declare interface FileSystem {
+  /**
+   * Gets the attributes of a file
+   *
+   * @param filepath - A string containing the path of a file to inspect
+   * @param aName - An optional attribute name. If this value is specified, only the attribute requested, is returned
+   * @returns
+   * A table with the file attributes corresponding to filepath (or nil followed by an error message in case of error). If the second optional argument is given, then a string is returned with the value of the named attribute. attribute mode is a string, all the others are numbers, and the time related attributes use the same time reference of os.time:
+   * dev - A number containing the device the file resides on
+   * ino - A number containing the inode of the file
+   * mode - A string containing the type of the file (possible values are: file, directory, link, socket, named pipe, char device, block device or other)
+   * nlink - A number containing a count of hard links to the file
+   * uid - A number containing the user-id of owner
+   * gid - A number containing the group-id of owner
+   * rdev - A number containing the type of device, for files that are char/block devices
+   * access - A number containing the time of last access modification (as seconds since the UNIX epoch)
+   * change - A number containing the time of last file status change (as seconds since the UNIX epoch)
+   * modification - A number containing the time of the last file contents change (as seconds since the UNIX epoch)
+   * permissions - A 9 character string specifying the user access permissions for the file. The first three characters represent Read/Write/Execute permissions for the file owner. The first character will be "r" if the user has read permissions, "-" if they do not; the second will be "w" if they have write permissions, "-" if they do not; the third will be "x" if they have execute permissions, "-" if they do not. The second group of three characters follow the same convention, but refer to whether or not the file's group have Read/Write/Execute permissions, and the final three characters follow the same convention, but apply to other system users not covered by the Owner or Group fields.
+   * creation - A number containing the time the file was created (as seconds since the UNIX epoch)
+   * size - A number containing the file size, in bytes
+   * blocks - A number containing the number of blocks allocated for file
+   * blksize - A number containing the optimal file system I/O blocksize
+   */
+  attributes(this: void, filepath: string, aName?: string): Record<string, any> | null
 }
