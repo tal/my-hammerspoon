@@ -233,7 +233,7 @@ function sendSpotifyCommand(cmd: 'promote' | 'demotes' | 'promotes'): Task | und
         print(stdErr)
       }
       else {
-        hs.notify.show("Spotify Command", "unparseable", stdOut)
+        hs.notify.show("Spotify Command", "unparsable", stdOut)
       }
     },
     args
