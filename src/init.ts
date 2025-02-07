@@ -1,10 +1,10 @@
-type InvocationDeifinitionSet = Record<string, InvocationDefinition>
+type InvocationDefinitionSet = Record<string, InvocationDefinition>
 
 type InvocationDefinition = {
   desc: string
   key: string
   appName?: string
-  subInvocations?: InvocationDeifinitionSet
+  subInvocations?: InvocationDefinitionSet
 }
 
 const BaseDefinitions = {
@@ -18,6 +18,11 @@ const BaseDefinitions = {
         key: "w",
         appName: "WhatsApp.app"
       },
+      'a': {
+        desc: "Messages",
+        key: 'a',
+        appName: "Messages.app",
+      }
     }
   },
   'c': {
@@ -33,7 +38,19 @@ const BaseDefinitions = {
   'f': {
     desc: "Calendar",
     key: 'f',
-    appName: "Fantastical.app"
+    appName: "Fantastical.app",
+    subInvocations: {
+      'g': {
+        desc: "Google Calendar",
+        key: 'g',
+        appName: "Google Calendar.app",
+      },
+      'f': {
+        desc: "Fantastical",
+        key: 'f',
+        appName: "Fantastical.app",
+      }
+    },
   },
   'm': {
     desc: "Spotify",
@@ -62,9 +79,9 @@ const BaseDefinitions = {
       }
     },
   }
-} as const satisfies InvocationDeifinitionSet
+} as const satisfies InvocationDefinitionSet
 
-let currentDefinitions: InvocationDeifinitionSet = BaseDefinitions
+let currentDefinitions: InvocationDefinitionSet = BaseDefinitions
 
 const invocationTap = hs.eventtap.new([hs.eventtap.event.types.keyDown], (ev) => {
   if (ev && ev.getType() === hs.eventtap.event.types.keyDown) {
@@ -79,6 +96,10 @@ const invocationTap = hs.eventtap.new([hs.eventtap.event.types.keyDown], (ev) =>
     if (definition != null) {
       hs.alert.closeAll()
       hs.alert.show(`${key} - ${definition.desc}`, 0.5)
+      if (definition.subInvocations) {
+        currentDefinitions = definition.subInvocations
+        return true
+      }
       if (definition.appName) {
         hs.application.launchOrFocus(definition.appName)
       }
@@ -136,12 +157,6 @@ hs.hotkey.bind(['⌥','⌃','⇧'], 'right', undefined, () => {
 hs.hotkey.bind(['⌥','⌃','⇧'], 'left', undefined, () => {
   hs.spotify.previous()
 })
-
-// function fileExists(path: string): boolean {
-//   const attributes = hs.fs.attributes(path)
-
-//   return attributes?.NSFileType !== (hs.fs.attributes as any).NSFileType.nonexistent
-// }
 
 function dirExists(path: string): boolean {
   const attributes = hs.fs.attributes(path)
