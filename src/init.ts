@@ -68,10 +68,14 @@ const BaseDefinitions = {
     appName: "Things3.app"
   },
   'w': {
-    desc: "Arc",
+    desc: "Web",
     key: 'w',
-    appName: "Arc.app",
     subInvocations: {
+      'w': {
+        desc: "Arc",
+        key: 'w',
+        appName: "Arc.app",
+      },
       's': {
         desc: "Safari",
         key: "s",
@@ -101,6 +105,7 @@ const invocationTap = hs.eventtap.new([hs.eventtap.event.types.keyDown], (ev) =>
         return true
       }
       if (definition.appName) {
+        print(`launching ${definition.appName}`)
         hs.application.launchOrFocus(definition.appName)
       }
     }
