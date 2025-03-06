@@ -36,12 +36,19 @@ declare namespace hs {
   export const spotify: SpoonSpotify
   export const notify: Notify
   export const fs: FileSystem
+  export const pathwatcher: PathWatchers
 
   /**
    * Runs a shell command, optionally loading the users shell environment first, and returns stdout as a string, followed by the same result codes as os.execute would return.
    *
    */
   export const execute: (command: string | string[], with_user_env?: boolean) => LuaMultiReturn<[string, string, string, string]>
+
+  /**
+   * Reloads the Hammerspoon configuration
+   * This will reload the configuration from disk and immediately apply any changes from the last loaded version.
+   */
+  export function reload(): void
 }
 
 declare type UUID = string
@@ -96,7 +103,8 @@ declare type HSBColorRepresentation = HSBColor
 
 /** @noSelf */
 declare class Color {
-  ansiTerminalColors: any
+  /** A collection of colors representing standard ANSI terminal colors */
+  ansiTerminalColors: { [key: string]: RGBColorRepresentation | HSBColorRepresentation }
   /** This table contains a collection of various useful pre-defined colors */
   hammerspoon: {
     /** The same red used for OS X window close buttons */
@@ -104,7 +112,7 @@ declare class Color {
     /** The same green used for OS X window zoom buttons */
     osx_green: any,
     /** The same yellow used for OS X window minimize buttons */
-    osx_yello: any,
+    osx_yellow: any,
   }
   /** A collection of colors representing the X11 color names as defined at https://en.wikipedia.org/wiki/Web_colors#X11_color_names (names in lowercase) */
   x11: any
@@ -274,7 +282,7 @@ type EventTapTypeNames =
   'otherMouseUp' |
   'otherMouseDragged'
 
-declare type KeboardModifiers =
+declare type KeyboardModifiers =
   "⌥" |
   "⌃" |
   "⌘" |
@@ -302,7 +310,7 @@ declare type SpoonEvent = {
   getType: (nsSpecificType?: boolean) => EventTapTypes
   setType: (type: EventTapTypes) => SpoonEvent
   getKeyCode: () => number
-  getFlags: () => {[k in KeboardModifiers]: boolean}
+  getFlags: () => {[k in KeyboardModifiers]: boolean}
 }
 
 type SpoonEventTapCallback =
@@ -336,7 +344,7 @@ declare type EventTap = {
 declare interface Hotkeys {
   new: (
     this: void,
-    mods: KeboardModifiers[],
+    mods: KeyboardModifiers[],
     key: string | number,
     message?: string,
     pressedfn?: () => void,
@@ -346,7 +354,7 @@ declare interface Hotkeys {
 
   bind: (
     this: void,
-    mods: KeboardModifiers[],
+    mods: KeyboardModifiers[],
     key: string | number,
     message?: string,
     pressedfn?: () => void,
@@ -475,3 +483,75 @@ declare interface FileSystem {
    */
   attributes(this: void, filepath: string, aName?: string): Record<string, any> | null
 }
+
+// --- hs.pathwatcher ---
+// https://www.hammerspoon.org/docs/hs.pathwatcher.html
+
+/**
+ * Watch paths recursively for changes
+ * This module allows you to watch folders and/or files for changes and be notified when they occur.
+ * @noSelf
+ */
+declare class PathWatchers {
+  /**
+   * Creates a new path watcher object
+   *
+   * @param path A string containing the path to be watched
+   * @param callback A function to be called when changes are detected. The function should accept two parameters:
+   *                 - A string containing the paths that were changed
+   *                 - A table containing a list of strings indicating what aspects of the path changed. Possible values include:
+   *                   - "mustScanSubDirs" - The path contains modified directory contents that require rescanning
+   *                   - "userDropped" - The path was modified by the user in the Finder
+   *                   - "kernelDropped" - The path was modified by the kernel
+   *                   - "eventIdsWrapped" - The numeric event ID has wrapped
+   *                   - "historyDone" - All previously buffered events have been delivered
+   *                   - "rootChanged" - A change to the path occurred
+   *                   - "mount" - A volume was mounted underneath the path
+   *                   - "unmount" - A volume was unmounted underneath the path
+   *                   - "itemCreated" - An item was created at the path
+   *                   - "itemRemoved" - An item was removed from the path
+   *                   - "itemInodeMetaMod" - An attribute of an item at the path was modified
+   *                   - "itemRenamed" - An item at the path was renamed
+   *                   - "itemModified" - An item at the path was modified
+   *                   - "itemFinderInfoMod" - An item at the path had its Finder info modified
+   *                   - "itemChangeOwner" - An item at the path had its owner changed
+   *                   - "itemXattrMod" - An item at the path had its extended attributes modified
+   *                   - "itemIsFile" - The item at the path is a file
+   *                   - "itemIsDir" - The item at the path is a directory
+   *                   - "itemIsSymlink" - The item at the path is a symbolic link
+   * @returns A new PathWatcher object
+   */
+  new(
+    this: void,
+    path: string,
+    callback: (
+      this: void,
+      paths: string[],
+      changes: string[]
+    ) => void
+  ): PathWatcher | null
+}
+
+declare interface PathWatcher {
+  /**
+   * Starts a path watcher
+   *
+   * @returns The PathWatcher object, or nil if an error occurs
+   */
+  start(): PathWatcher | null
+
+  /**
+   * Stops a path watcher
+   *
+   * @returns The PathWatcher object
+   */
+  stop(): PathWatcher
+
+  /**
+   * Gets the path this watcher is watching
+   *
+   * @returns A string containing the path this watcher is watching
+   */
+  path(): string
+}
+

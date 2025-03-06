@@ -260,3 +260,42 @@ hs.hotkey.bind(['⌥','⌃'], 'down', undefined, () => {
   hs.alert.show("▼")
   sendSpotifyCommand('demotes')?.start()
 })
+
+/**
+ * Sets up a file watcher that automatically reloads Hammerspoon config
+ * when any Lua file in the Hammerspoon config directory changes
+ */
+function setupConfigFileWatcher(): void {
+  const configDir = os.getenv("HOME") + "/.hammerspoon/"
+
+  print(`Setting up config file watcher for ${configDir}`)
+
+  const watcher = hs.pathwatcher.new(configDir, (changedFiles: string[], flagTables: any) => {
+    const shouldReload = changedFiles.some(file => {
+      // Check if any changed file is a Lua file
+      const isLuaFile = file.endsWith(".lua")
+
+      if (isLuaFile) {
+        print(`Lua config file changed: ${file}`)
+        return true
+      }
+      return false
+    })
+
+    if (shouldReload) {
+      print("Reloading Hammerspoon configuration...")
+      hs.notify.show("Hammerspoon", "Configuration reloaded", "Config file change detected")
+      hs.reload()
+    }
+  })
+
+  if (watcher) {
+    watcher.start()
+    print("Config file watcher started")
+  } else {
+    print("Error: Could not create config file watcher")
+  }
+}
+
+// Call the setup function to activate the watcher
+setupConfigFileWatcher()
